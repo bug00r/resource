@@ -58,7 +58,7 @@ LDFLAGS+=-L/c/dev/lib$(BIT_SUFFIX) -L./$(BUILDPATH)
 
 
 THIRD_PARTY_LIBS=exslt xslt xml2 archive crypto nettle regex lzma z lz4 bz2 bcrypt zstd iconv
-REGEX_LIBS=regex_utils pcre2-8
+REGEX_LIBS=pcre2_utils pcre2-8
 #this c flags is used by regex lib
 CFLAGS+=-DPCRE2_STATIC
 
