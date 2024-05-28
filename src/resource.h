@@ -21,19 +21,19 @@ typedef struct {
 	char 			*type;		/* type */
 	size_t			file_size;	/* size of file in bytes */
 	unsigned char 	*data;		/* data as byte array */
-} resource_file_t;
+} ResourceFile;
 
 typedef struct {
 	unsigned int cnt;			/* Count of found result */ 
-	resource_file_t **files;	/* pointer to search result */
-} resource_search_result_t;
+	ResourceFile **files;	/* pointer to search result */
+} ResourceSearchResult;
 
 typedef struct {
 	bool					delete_data_on_free;	
 	void 					(*free_func)(void *ptr);
 	const unsigned char 	*archive_data;
 	size_t 					size;
-} archive_resource_t;
+} ArchiveResource;
 
 /*
 	The function "archive_resource_memory" initialize an archive resource from
@@ -49,9 +49,9 @@ typedef struct {
 	data			pointer to archive memory chunk
 	size_in_bytes	size of bytes to read.
 	
-	returns: pointer of archive_resource_t with given data.
+	returns: pointer of ArchiveResource with given data.
 */
-archive_resource_t* archive_resource_memory(const unsigned char *data, size_t size_in_bytes);
+ArchiveResource* archive_resource_memory(const unsigned char *data, size_t size_in_bytes);
 
 /*
 	The function "archive_resource_set_config_free" sets or unsets an automatic
@@ -67,13 +67,13 @@ archive_resource_t* archive_resource_memory(const unsigned char *data, size_t si
 						(see archive_resource_set_config_free_default)
 	
 */
-void archive_resource_set_config_free(archive_resource_t *archive_resource, bool delete_data_on_free, void (*free_func)(void * ptr));
+void archive_resource_set_config_free(ArchiveResource *archive_resource, bool delete_data_on_free, void (*free_func)(void * ptr));
 
 /*
 	The function "archive_resource_set_config_free_default" does the same like
 	function "archive_resource_set_config_free" but sets delete with standard free func
 */
-void archive_resource_set_config_free_default(archive_resource_t *archive_resource, bool delete_data_on_free);
+void archive_resource_set_config_free_default(ArchiveResource *archive_resource, bool delete_data_on_free);
 
 /*
 	The function "archive_resource_search" search against path name with pcre2
@@ -83,14 +83,14 @@ void archive_resource_set_config_free_default(archive_resource_t *archive_resour
 	---------			-----------------------------------------
 	pattern				Search Pattern based on pcre2
 
-	returns: pointer to array with pointer to resource_file_t item as data. Last Element is NULL.
+	returns: pointer to array with pointer to ResourceFile item as data. Last Element is NULL.
 			 You have to free each pointer with "resource_file_free", the point todo this is your
-			 choice(based on reusage in another context), at least you have to free the resource_file_t*
+			 choice(based on reusage in another context), at least you have to free the ResourceFile*
 			 pointer.
 	
 */
-resource_search_result_t *archive_resource_search(archive_resource_t *archive_resource, const unsigned char *pattern);
-resource_search_result_t *archive_resource_search_by_name(archive_resource_t *archive_resource, const unsigned char *name);
+ResourceSearchResult *archive_resource_search(ArchiveResource *archive_resource, const unsigned char *pattern);
+ResourceSearchResult *archive_resource_search_by_name(ArchiveResource *archive_resource, const unsigned char *name);
 
 /*
 	The function "resource_file_new_empty" creates a new empty file.
@@ -98,7 +98,7 @@ resource_search_result_t *archive_resource_search_by_name(archive_resource_t *ar
 	returns: new empty file
 	
 */
-resource_file_t * resource_file_new_empty();
+ResourceFile * resource_file_new_empty();
 
 /*
 	The function "resource_file_new" creates a new file. It will create all needed entries of
@@ -113,7 +113,7 @@ resource_file_t * resource_file_new_empty();
 	returns: new filled file
 	
 */
-resource_file_t * resource_file_new(const char *full_file_path, unsigned char 	*data, size_t	data_size);
+ResourceFile * resource_file_new(const char *full_file_path, unsigned char 	*data, size_t	data_size);
 
 /*
 	The function "resource_file_copy_deep" makes a deep copy of given
@@ -126,7 +126,7 @@ resource_file_t * resource_file_new(const char *full_file_path, unsigned char 	*
 	returns: a new copy of given file.
 	
 */
-resource_file_t * resource_file_copy_deep(resource_file_t *file);
+ResourceFile * resource_file_copy_deep(ResourceFile *file);
 
 /*
 	The function "resource_file_free" frees the complete memory a resource file, including the
@@ -137,7 +137,7 @@ resource_file_t * resource_file_copy_deep(resource_file_t *file);
 	file				pointer to pointer of file, this pointer will be NULL
 	
 */
-void resource_file_free(resource_file_t **file);
+void resource_file_free(ResourceFile **file);
 
 /*
 	The function "resource_search_result_free" frees the complete memory for the container of resource files.
@@ -149,7 +149,7 @@ void resource_file_free(resource_file_t **file);
 	result				pointer to pointer of result, this pointer will be NULL
 	
 */
-void resource_search_result_free(resource_search_result_t **result);
+void resource_search_result_free(ResourceSearchResult **result);
 
 /*
 	The function "resource_search_result_full_free" frees the complete memory for the container of resource files
@@ -161,7 +161,7 @@ void resource_search_result_free(resource_search_result_t **result);
 	result				pointer to pointer of result, this pointer will be NULL
 	
 */
-void resource_search_result_full_free(resource_search_result_t **result);
+void resource_search_result_full_free(ResourceSearchResult **result);
 
 /*
 	The function "archive_resource_free"  will clean up the archive resource object.
@@ -172,6 +172,6 @@ void resource_search_result_full_free(resource_search_result_t **result);
 	archive_resource	archive resource to delete, will be set to NULL.
 	
 */
-void archive_resource_free(archive_resource_t **archive_resource);
+void archive_resource_free(ArchiveResource **archive_resource);
 
 #endif

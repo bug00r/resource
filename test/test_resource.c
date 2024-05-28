@@ -34,15 +34,15 @@ EXTERN_BLOB(zip_resource, 7z);
 static void test_resource_read_archive_items() {
 	DEBUG_LOG_ARGS(">>> %s => %s\n", __FILE__, __func__);
 	
-	archive_resource_t* ar = archive_resource_memory(&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_size);
+	ArchiveResource* ar = archive_resource_memory(&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_size);
 	
-	resource_search_result_t* result = archive_resource_search(ar, "xml/.*.xml");
+	ResourceSearchResult* result = archive_resource_search(ar, "xml/.*.xml");
 	if (result == NULL) return;
 	
 	DEBUG_LOG_ARGS("found results (%i)\n", result->cnt);
 	
 	for(unsigned int cnt_files = result->cnt; cnt_files--;) {
-		resource_file_t *file = result->files[cnt_files];
+		ResourceFile *file = result->files[cnt_files];
 		DEBUG_LOG_ARGS("full: %s(%i)\npath: %s(%i)\nfile: %s(%i)\nname: %s(%i)\ntype: %s(%i)\nfile_size: %i\n", file->complete, strlen(file->complete), file->path, strlen(file->path), file->file, strlen(file->file), file->name, strlen(file->name), file->type, strlen(file->type), file->file_size);
 	}
 	
@@ -56,15 +56,15 @@ static void test_resource_read_archive_items() {
 static void test_resource_read_archive_items_xml() {
 	DEBUG_LOG_ARGS(">>> %s => %s\n", __FILE__, __func__);
 	
-	archive_resource_t* ar = archive_resource_memory(&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_size);
+	ArchiveResource* ar = archive_resource_memory(&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_size);
 	
-	resource_search_result_t* result = archive_resource_search(ar, ".*talents.*.xml");
+	ResourceSearchResult* result = archive_resource_search(ar, ".*talents.*.xml");
 	
 	if (result == NULL) return;
 	DEBUG_LOG_ARGS("found results (%i)\n", result->cnt);
 	
 	for(unsigned int cnt_files = result->cnt; cnt_files--;) {
-		resource_file_t *file = result->files[cnt_files];
+		ResourceFile *file = result->files[cnt_files];
 		DEBUG_LOG_ARGS("full: %s(%i)\npath: %s(%i)\nfile: %s(%i)\nname: %s(%i)\ntype: %s(%i)\nfile_size: %i\n", file->complete, strlen(file->complete), file->path, strlen(file->path), file->file, strlen(file->file), file->name, strlen(file->name), file->type, strlen(file->type), file->file_size);
 		xmlDocPtr doc; /* the resulting document tree */
 
@@ -127,9 +127,9 @@ static void test_resource_read_archive_items_xml() {
 static void test_resource_search_name_xml() {
 	DEBUG_LOG_ARGS(">>> %s => %s\n", __FILE__, __func__);
 
-	archive_resource_t* ar = archive_resource_memory(&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_size);
+	ArchiveResource* ar = archive_resource_memory(&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_size);
 	
-	resource_search_result_t* result = archive_resource_search_by_name(ar, "xml/talents.xml");
+	ResourceSearchResult* result = archive_resource_search_by_name(ar, "xml/talents.xml");
 	
 	assert(result->cnt == 1);
 	DEBUG_LOG_ARGS("found results (%i)\n", result->cnt);

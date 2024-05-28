@@ -36,10 +36,10 @@ static unsigned char* __resource_read_entry_data_string(struct archive *a, struc
 	return data;
 }
 
-static resource_file_t* __resource_read_entry(struct archive *a, struct archive_entry *entry) {
+static ResourceFile* __resource_read_entry(struct archive *a, struct archive_entry *entry) {
 
 	la_int64_t entry_size = archive_entry_size(entry);
-	resource_file_t *result = NULL;
+	ResourceFile *result = NULL;
 	if ( entry_size > 0) {
 	
 		const char *entry_pathname = archive_entry_pathname(entry);
@@ -56,7 +56,7 @@ static resource_file_t* __resource_read_entry(struct archive *a, struct archive_
 }
 
 typedef struct _sr_item {
-	resource_file_t *file;
+	ResourceFile *file;
 	struct _sr_item *next;
 } sr_item_t;
 
@@ -79,7 +79,7 @@ static void __delete_sr_item(sr_item_t **item) {
 	}
 }
 
-static resource_search_result_t * __resource_load_resource(archive_resource_t * archive_resource, const unsigned char *pattern, 
+static ResourceSearchResult * __resource_load_resource(ArchiveResource * archive_resource, const unsigned char *pattern, 
 														   bool (*match_func)(const unsigned char *, const unsigned char *)) {
 	struct archive *a = archive_read_new();
 	
@@ -103,7 +103,7 @@ static resource_search_result_t * __resource_load_resource(archive_resource_t * 
 
 		  if ( match_func(pattern, pathname) ) {
 
-			resource_file_t *new_file = __resource_read_entry(a, entry);
+			ResourceFile *new_file = __resource_read_entry(a, entry);
 			if ( new_file != NULL ) {
 				cur_temp_file->file = new_file;
 				cur_temp_file->next = __new_sr_item();
@@ -121,9 +121,9 @@ static resource_search_result_t * __resource_load_resource(archive_resource_t * 
 	}
 	#endif
 	
-	resource_search_result_t *result = malloc(sizeof(resource_search_result_t));
+	ResourceSearchResult *result = malloc(sizeof(ResourceSearchResult));
 	result->cnt = cnt_files;
-	result->files = malloc(cnt_files * sizeof(resource_file_t *));
+	result->files = malloc(cnt_files * sizeof(ResourceFile *));
 	
 	cur_temp_file = first_file;
 	unsigned int cur_file = 0;
@@ -148,12 +148,12 @@ static resource_search_result_t * __resource_load_resource(archive_resource_t * 
 	return result;
 }
 
-static void __resource_search_result_free_raw(resource_search_result_t **result, bool with_file_entries) {
+static void __resource_search_result_free_raw(ResourceSearchResult **result, bool with_file_entries) {
 	if ( result != NULL && *result != NULL ) {
-		resource_search_result_t *to_delete_result = *result;
+		ResourceSearchResult *to_delete_result = *result;
 		
 		if ( with_file_entries ) {
-			resource_file_t ** files = to_delete_result->files;
+			ResourceFile ** files = to_delete_result->files;
 			for(unsigned int cnt_files = to_delete_result->cnt; cnt_files--;) {
 				resource_file_free(&files[cnt_files]); // TODO SEGFAULT!!! :(
 			}
@@ -171,8 +171,8 @@ static void __resource_search_result_free_raw(resource_search_result_t **result,
 */
 #endif 
 
-archive_resource_t * archive_resource_memory(const unsigned char *data, size_t size_in_bytes) {
-	archive_resource_t * new_ar = malloc(sizeof(archive_resource_t));
+ArchiveResource * archive_resource_memory(const unsigned char *data, size_t size_in_bytes) {
+	ArchiveResource * new_ar = malloc(sizeof(ArchiveResource));
 	
 	new_ar->archive_data 		= data;
 	new_ar->size 				= size_in_bytes;
@@ -182,7 +182,7 @@ archive_resource_t * archive_resource_memory(const unsigned char *data, size_t s
 	return new_ar;
 }
 
-void archive_resource_set_config_free(archive_resource_t *archive_resource, bool delete_data_on_free, void (*free_func)(void * ptr)) {
+void archive_resource_set_config_free(ArchiveResource *archive_resource, bool delete_data_on_free, void (*free_func)(void * ptr)) {
 	
 	if ( archive_resource != NULL ) {
 	
@@ -192,7 +192,7 @@ void archive_resource_set_config_free(archive_resource_t *archive_resource, bool
 	}	
 }
 
-void archive_resource_set_config_free_default(archive_resource_t *archive_resource, bool delete_data_on_free) {
+void archive_resource_set_config_free_default(ArchiveResource *archive_resource, bool delete_data_on_free) {
 
 	if ( archive_resource != NULL ) {
 	
@@ -203,16 +203,16 @@ void archive_resource_set_config_free_default(archive_resource_t *archive_resour
 
 }
 
-resource_search_result_t * archive_resource_search(archive_resource_t *archive_resource, const unsigned char *pattern) {
+ResourceSearchResult * archive_resource_search(ArchiveResource *archive_resource, const unsigned char *pattern) {
 	return __resource_load_resource(archive_resource, pattern, regex_match);
 }
 
-resource_search_result_t *archive_resource_search_by_name(archive_resource_t *archive_resource, const unsigned char *name) {
+ResourceSearchResult *archive_resource_search_by_name(ArchiveResource *archive_resource, const unsigned char *name) {
 	return __resource_load_resource(archive_resource, name, name_match);
 }
 
-resource_file_t * resource_file_new_empty() {
-	resource_file_t *new_file = malloc(sizeof(resource_file_t));
+ResourceFile * resource_file_new_empty() {
+	ResourceFile *new_file = malloc(sizeof(ResourceFile));
 	new_file->complete = NULL;
 	new_file->path = NULL;
 	new_file->file = NULL;
@@ -223,9 +223,9 @@ resource_file_t * resource_file_new_empty() {
 	return new_file;
 }
 
-resource_file_t * resource_file_new(const char *full_file_path, unsigned char 	*data, size_t	data_size) {
+ResourceFile * resource_file_new(const char *full_file_path, unsigned char 	*data, size_t	data_size) {
 
-	resource_file_t *new_file = resource_file_new_empty();
+	ResourceFile *new_file = resource_file_new_empty();
 	new_file->complete 	= copy_string(full_file_path);
 	new_file->data 		= data;
 	new_file->file_size = data_size;
@@ -238,9 +238,9 @@ resource_file_t * resource_file_new(const char *full_file_path, unsigned char 	*
 	return new_file;
 }
 
-resource_file_t * resource_file_copy_deep(resource_file_t *file) {
+ResourceFile * resource_file_copy_deep(ResourceFile *file) {
 
-	resource_file_t *copy_file = resource_file_new_empty();
+	ResourceFile *copy_file = resource_file_new_empty();
 	copy_file->complete 	= copy_string(file->complete);
 	copy_file->path = copy_string(file->path);
 	copy_file->file = copy_string(file->file);
@@ -254,11 +254,11 @@ resource_file_t * resource_file_copy_deep(resource_file_t *file) {
 	return copy_file;
 }
 
-void resource_file_free(resource_file_t **file) {
+void resource_file_free(ResourceFile **file) {
 
 	if ( file != NULL && *file != NULL ) {
 	
-		resource_file_t *to_deletefile = *file;
+		ResourceFile *to_deletefile = *file;
 	
 		free(to_deletefile->complete);
 		free(to_deletefile->path);
@@ -274,18 +274,18 @@ void resource_file_free(resource_file_t **file) {
 	}
 }
 
-void resource_search_result_free(resource_search_result_t **result) {
+void resource_search_result_free(ResourceSearchResult **result) {
 	__resource_search_result_free_raw(result, false);
 }
 
-void resource_search_result_full_free(resource_search_result_t **result) {
+void resource_search_result_full_free(ResourceSearchResult **result) {
 	__resource_search_result_free_raw(result, true);
 }
 
-void archive_resource_free(archive_resource_t **archive_resource) {
+void archive_resource_free(ArchiveResource **archive_resource) {
 	if ( archive_resource != NULL && *archive_resource != NULL ) {
 		
-		archive_resource_t * to_delete = *archive_resource;
+		ArchiveResource * to_delete = *archive_resource;
 		
 		if ( to_delete->delete_data_on_free ) {
 			
