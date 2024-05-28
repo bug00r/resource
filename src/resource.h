@@ -1,5 +1,5 @@
 #ifndef RESOURCE_H
-#define RESOURCE_H
+#define RESOURCE_H 
 
 #include <stdlib.h>
 #include <string.h>
