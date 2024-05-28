@@ -53,7 +53,7 @@ LIB_TARGET:=$(BUILDPATH)$(LIB)
 
 OBJS+=$(patsubst %,$(BUILDPATH)%,$(patsubst %,%.o,$(_SRC_FILES)))
 
-CFLAGS+=-I/c/dev/include -I./src
+CFLAGS+=-I./src -I/c/dev/include
 LDFLAGS+=-L/c/dev/lib$(BIT_SUFFIX) -L./$(BUILDPATH)
 
 
