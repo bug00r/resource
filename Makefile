@@ -3,6 +3,8 @@ CFLAGS:=$(_CFLAGS)
 _LDFLAGS:=$(LDFLAGS)
 LDFLAGS:=$(_LDFLAGS)
 
+UNAME_S := $(shell uname -s)
+
 ARFLAGS?=rcs
 PATHSEP?=/
 BUILDROOT?=build
@@ -63,7 +65,14 @@ REGEX_LIBS=pcre2_utils pcre2-8
 #this c flags is used by regex lib
 CFLAGS+=-DPCRE2_STATIC
 
-#OS_LIBS=kernel32 user32 gdi32 winspool comdlg32 advapi32 shell32 uuid ole32 oleaut32 comctl32 ws2_32
+ifeq ($(OS), Windows_NT)
+	LDFLAGS+=-static
+	OS_LIBS=kernel32 user32 gdi32 winspool comdlg32 advapi32 shell32 uuid ole32 oleaut32 comctl32 ws2_32 iconv
+endif
+
+ifeq ($(UNAME_S), Linux) 
+	# nothing
+endif
 
 USED_LIBS=$(patsubst %,-l%, utils $(REGEX_LIBS) $(THIRD_PARTY_LIBS) $(OS_LIBS)  )
 
