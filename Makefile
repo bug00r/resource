@@ -43,7 +43,8 @@ ifeq ($(M32),1)
 endif
 
 CFLAGS+=-std=c11 -DIN_LIBXML -DLIBXML_STATIC -Wpedantic -Wall -Wextra -Wno-pointer-sign
-
+## https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94391
+## not working on linux CFLAGS+=-fpie -fno-direct-access-extern-object
 _SRC_FILES+=resource
 
 LIBNAME:=resource
@@ -57,16 +58,16 @@ CFLAGS+=-I./src -I/c/dev/include
 LDFLAGS+=-L/c/dev/lib$(BIT_SUFFIX) -L./$(BUILDPATH)
 
 
-THIRD_PARTY_LIBS=exslt xslt xml2 archive crypto nettle regex lzma z lz4 bz2 bcrypt zstd iconv
+THIRD_PARTY_LIBS=exslt xslt xml2 archive crypto nettle lzma z lz4 bz2 zstd
 REGEX_LIBS=pcre2_utils pcre2-8
 #this c flags is used by regex lib
 CFLAGS+=-DPCRE2_STATIC
 
-OS_LIBS=kernel32 user32 gdi32 winspool comdlg32 advapi32 shell32 uuid ole32 oleaut32 comctl32 ws2_32
+#OS_LIBS=kernel32 user32 gdi32 winspool comdlg32 advapi32 shell32 uuid ole32 oleaut32 comctl32 ws2_32
 
 USED_LIBS=$(patsubst %,-l%, utils $(REGEX_LIBS) $(THIRD_PARTY_LIBS) $(OS_LIBS)  )
 
-LDFLAGS+=-static $(USED_LIBS)
+LDFLAGS+=$(USED_LIBS)
 
 #wc -c < filename => if needed for after compression size of bytes
 RES=zip_resource

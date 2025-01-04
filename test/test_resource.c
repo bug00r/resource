@@ -34,7 +34,7 @@ EXTERN_BLOB(zip_resource, 7z);
 static void test_resource_read_archive_items() {
 	DEBUG_LOG_ARGS(">>> %s => %s\n", __FILE__, __func__);
 	
-	ArchiveResource* ar = archive_resource_memory(&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_size);
+	ArchiveResource* ar = archive_resource_memory(&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_end - (size_t)&_binary_zip_resource_7z_start);
 	
 	ResourceSearchResult* result = archive_resource_search(ar, "xml/.*.xml");
 	if (result == NULL) return;
@@ -56,7 +56,7 @@ static void test_resource_read_archive_items() {
 static void test_resource_read_archive_items_xml() {
 	DEBUG_LOG_ARGS(">>> %s => %s\n", __FILE__, __func__);
 	
-	ArchiveResource* ar = archive_resource_memory(&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_size);
+	ArchiveResource* ar = archive_resource_memory(&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_end - (size_t)&_binary_zip_resource_7z_start);
 	
 	ResourceSearchResult* result = archive_resource_search(ar, ".*talents.*.xml");
 	
@@ -127,7 +127,7 @@ static void test_resource_read_archive_items_xml() {
 static void test_resource_search_name_xml() {
 	DEBUG_LOG_ARGS(">>> %s => %s\n", __FILE__, __func__);
 
-	ArchiveResource* ar = archive_resource_memory(&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_size);
+	ArchiveResource* ar = archive_resource_memory(&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_end - (size_t)&_binary_zip_resource_7z_start);
 	
 	ResourceSearchResult* result = archive_resource_search_by_name(ar, "xml/talents.xml");
 	
