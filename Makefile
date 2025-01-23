@@ -47,7 +47,7 @@ endif
 CFLAGS+=-std=c11 -DIN_LIBXML -DLIBXML_STATIC -Wpedantic -Wall -Wextra -Wno-pointer-sign
 ## https://gcc.gnu.org/bugzilla/show_bug.cgi?id=94391
 ## not working on linux CFLAGS+=-fpie -fno-direct-access-extern-object
-_SRC_FILES+=resource
+_SRC_FILES+=resource resource_sqlite
 
 LIBNAME:=resource
 LIBEXT:=a
@@ -60,7 +60,7 @@ CFLAGS+=-I./src -I/c/dev/include
 LDFLAGS+=-L/c/dev/lib$(BIT_SUFFIX) -L./$(BUILDPATH)
 
 
-THIRD_PARTY_LIBS=exslt xslt xml2 archive crypto nettle lzma z lz4 bz2 zstd
+THIRD_PARTY_LIBS=sqlite3 exslt xslt xml2 archive crypto nettle lzma z lz4 bz2 zstd
 REGEX_LIBS=pcre2_utils pcre2-8
 #this c flags is used by regex lib
 CFLAGS+=-DPCRE2_STATIC
@@ -88,7 +88,7 @@ ZIP=7z
 ZIP_ARGS=a -t7z
 ZIP_CMD=$(ZIP) $(ZIP_ARGS)
 
-all: mkbuilddir mkzip addzip $(LIB_TARGET)
+all: mkbuilddir $(LIB_TARGET)
 
 $(LIB_TARGET): $(_SRC_FILES)
 	$(AR) $(ARFLAGS) $(LIB_TARGET) $(OBJS)
@@ -100,9 +100,13 @@ test_resource: mkbuilddir mkzip addzip $(LIB_TARGET)
 	$(CC) $(CFLAGS) ./test/$@.c ./src/resource.c $(RES_O_PATH) -o $(BUILDPATH)$@.exe $(LDFLAGS)
 	$(BUILDPATH)$@.exe
 
+test_resource_sqlite: mkbuilddir mkdb $(LIB_TARGET)
+	$(CC) $(CFLAGS) ./test/$@.c ./src/resource_sqlite.c $(RES_O_PATH) -o $(BUILDPATH)$@.exe $(LDFLAGS)
+	cd $(BUILDPATH) ; ./$@.exe
+
 .PHONY: clean mkbuilddir mkzip addzip test 
 
-test: test_resource
+test: test_resource test_resource_sqlite
 
 addzip:
 	cd $(BUILDPATH); \
@@ -110,6 +114,9 @@ addzip:
 
 mkzip:
 	-$(ZIP_CMD) $(BUILDPATH)$(RES_7Z) $(RES_FILES_PATTERN)
+
+mkdb:
+	cd test ; rm -f $(BUILDPATH)res_test.db ; cat res_test_init.sqlite | sqlite3 ; mv res_test.db ../$(BUILDPATH)
 
 mkbuilddir:
 	mkdir -p $(BUILDDIR)
@@ -121,4 +128,5 @@ install:
 	mkdir -p $(INSTALL_ROOT)include
 	mkdir -p $(INSTALL_ROOT)lib$(BIT_SUFFIX)
 	cp ./src/resource.h $(INSTALL_ROOT)include/resource.h
+	cp ./src/resource.h $(INSTALL_ROOT)include/resource_sqlite.h
 	cp $(BUILDPATH)$(LIB) $(INSTALL_ROOT)lib$(BIT_SUFFIX)/$(LIB)

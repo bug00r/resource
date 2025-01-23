@@ -1,0 +1,13 @@
+CREATE TABLE test (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    key     VARCHAR,
+    value   VARCHAR
+);
+
+INSERT INTO test (key, value) VALUES 
+('key1', 'value1'),
+('key2', 'value2'),
+('key3', 'value3'),
+('key4', 'value4');
+
+.save res_test.db
