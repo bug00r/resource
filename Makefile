@@ -101,7 +101,7 @@ test_resource: mkbuilddir mkzip addzip $(LIB_TARGET)
 	$(BUILDPATH)$@.exe
 
 test_resource_sqlite: mkbuilddir mkdb $(LIB_TARGET)
-	$(CC) $(CFLAGS) ./test/$@.c ./src/resource_sqlite.c $(RES_O_PATH) -o $(BUILDPATH)$@.exe $(LDFLAGS)
+	$(CC) $(CFLAGS) ./test/$@.c ./src/resource_sqlite.c $(BUILDPATH)/res_test_embed.o -o $(BUILDPATH)$@.exe $(LDFLAGS)
 	cd $(BUILDPATH) ; ./$@.exe
 
 .PHONY: clean mkbuilddir mkzip addzip test 
@@ -117,6 +117,8 @@ mkzip:
 
 mkdb:
 	cd test ; rm -f $(BUILDPATH)res_test.db ; cat res_test_init.sqlite | sqlite3 ; mv res_test.db ../$(BUILDPATH)
+	cd test ; rm -f $(BUILDPATH)res_test_embed.db ; cat res_test_init_embed.sqlite | sqlite3 ; mv res_test_embed.db ../$(BUILDPATH)
+	cd $(BUILDPATH); ld -r -b binary res_test_embed.db -o res_test_embed.o
 
 mkbuilddir:
 	mkdir -p $(BUILDDIR)

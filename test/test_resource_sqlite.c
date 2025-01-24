@@ -7,6 +7,7 @@
 #include "resource_sqlite.h"
 #include "defs.h"
 
+EXTERN_BLOB(res_test_embed, db);
 
 #ifndef DEBUG_LOG_ARGS
 	#if debug != 0
@@ -47,35 +48,6 @@ static bool __resource_sqlite_opendb(const char *filename, sqlite3 **pDb, int fl
 
     return openOk;
 }
-
-/**
-int sqlite3_exec(
-  sqlite3*,                                  An open database
-  const char *sql,                           SQL to be evaluated
-  int (*callback)(void*,int,char**,char**),  Callback function 
-  void *,                                    1st argument to callback
-  char **errmsg                              Error msg written here
-);
-
- */
-
-/*id = 1
-key = key1
-value = value1
-
-id = 2
-key = key2
-value = value2
-
-id = 3
-key = key3
-value = value3
-
-id = 4
-key = key4
-value = value4
-
-*/
 
 static int callback_one(void *pCounter, int argc, char **argv, char **azColName){
     int i;
@@ -118,6 +90,47 @@ static int callback_one(void *pCounter, int argc, char **argv, char **azColName)
     return 0;
 }
 
+static int callback_two(void *pCounter, int argc, char **argv, char **azColName){
+    int i;
+    int *counter = (int*)pCounter;
+    (*counter)++;
+
+    DEBUG_LOG_ARGS("counter: %i\n", *counter);
+
+    assert(argc == 3 );
+
+    assert(strcmp("id",azColName[0]) == 0);
+    assert(strcmp("key",azColName[1]) == 0);
+    assert(strcmp("value",azColName[2]) == 0);
+
+    //segfault by using this pointer 
+    switch (*counter) 
+    {
+        case 1: assert(strcmp("1",argv[0]) == 0);
+                assert(strcmp("key5",argv[1]) == 0);
+                assert(strcmp("value5",argv[2]) == 0);
+                break;
+        case 2: assert(strcmp("2",argv[0]) == 0);
+                assert(strcmp("key6",argv[1]) == 0);
+                assert(strcmp("value6",argv[2]) == 0);
+                break;
+        case 3: assert(strcmp("3",argv[0]) == 0);
+                assert(strcmp("key7",argv[1]) == 0);
+                assert(strcmp("value7",argv[2]) == 0);
+                break;
+        case 4: assert(strcmp("4",argv[0]) == 0);
+                assert(strcmp("key8",argv[1]) == 0);
+                assert(strcmp("value8",argv[2]) == 0);
+                break;
+    }
+
+    for(i=0; i<argc; i++){
+        DEBUG_LOG_ARGS("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+    }
+    DEBUG_LOG("\n");
+    return 0;
+}
+
 static bool __resource_sqlite_exec_stmt(sqlite3 *pDb,  const char *sql_stmt, int (*callback)(void*,int,char**,char**),
                                         void *callbackData)
 {
@@ -126,7 +139,7 @@ static bool __resource_sqlite_exec_stmt(sqlite3 *pDb,  const char *sql_stmt, int
     int rc;
     int counter = 0;
 
-    rc = sqlite3_exec(pDb, "SELECT * FROM test;", callback_one, (void*)&counter, &zErrMsg);
+    rc = sqlite3_exec(pDb, "SELECT * FROM test;", callback, (void*)&counter, &zErrMsg);
     if( rc!=SQLITE_OK ){
       fprintf(stderr, "SQL error: %s\n", zErrMsg);
       sqlite3_free(zErrMsg);
@@ -140,12 +153,50 @@ static bool __resource_sqlite_exec_stmt(sqlite3 *pDb,  const char *sql_stmt, int
 static void test_resource_sqlite_raw() {
 	DEBUG_LOG_ARGS(">>> %s => %s\n", __FILE__, __func__);
 	
-    sqlite3 *db;
+  sqlite3 *db;
 
-    assert( __resource_sqlite_opendb("res_test.db", &db, SQLITE_OPEN_READONLY) );
+  assert( __resource_sqlite_opendb("res_test.db", &db, SQLITE_OPEN_READONLY) );
+
+  int counter = 0;
+  assert ( __resource_sqlite_exec_stmt(db, "SELECT * FROM test;", callback_one, (void*)&counter) );
+
+  sqlite3_close(db);
+
+	DEBUG_LOG("<<<\n");
+}
+
+/**
+int sqlite3_deserialize(
+  sqlite3 *db,            // The database connection 
+  const char *zSchema,    // Which DB to reopen with the deserialization 
+  unsigned char *pData,   // The serialized database content 
+  sqlite3_int64 szDb,     // Number bytes in the deserialization 
+  sqlite3_int64 szBuf,    // Total size of buffer pData[] 
+  unsigned mFlags         // Zero or more SQLITE_DESERIALIZE_* flags 
+);
+ */
+static void test_resource_sqlite_raw_embed() {
+	DEBUG_LOG_ARGS(">>> %s => %s\n", __FILE__, __func__);
+	
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    assert( __resource_sqlite_opendb("embedded", &db, SQLITE_OPEN_READONLY | SQLITE_OPEN_MEMORY) );
+    //&_binary_zip_resource_7z_start, (size_t)&_binary_zip_resource_7z_end - (size_t)&_binary_zip_resource_7z_start
+    //res_test_embed_db
+    size_t dbByteCnt = (size_t)&_binary_res_test_embed_db_end - (size_t)&_binary_res_test_embed_db_start;
+    int rc = sqlite3_deserialize(db,"main", &_binary_res_test_embed_db_start,dbByteCnt, dbByteCnt, SQLITE_DESERIALIZE_READONLY);
+
+    if( rc!=SQLITE_OK ){
+      fprintf(stderr, "SQL open embed error: %s\n", zErrMsg);
+      sqlite3_free(zErrMsg);
+      sqlite3_close(db);
+      return;
+    }
+
+    assert(rc == SQLITE_OK);
 
     int counter = 0;
-    assert ( __resource_sqlite_exec_stmt(db, "SELECT * FROM test;", callback_one, (void*)&counter) );
+    assert ( __resource_sqlite_exec_stmt(db, "SELECT * FROM test;", callback_two, (void*)&counter) );
 
     sqlite3_close(db);
 
@@ -159,7 +210,9 @@ main()
 
 	DEBUG_LOG(">> Start resource sqlite tests:\n");
 
-    test_resource_sqlite_raw();
+  test_resource_sqlite_raw();
+
+  test_resource_sqlite_raw_embed();
 	
 	DEBUG_LOG("<< end resource tests:\n");
 	return 0;
