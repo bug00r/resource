@@ -80,7 +80,9 @@ value = value4
 static int callback_one(void *pCounter, int argc, char **argv, char **azColName){
     int i;
     int *counter = (int*)pCounter;
-    *counter++;
+    (*counter)++;
+
+    DEBUG_LOG_ARGS("counter: %i\n", *counter);
 
     assert(argc == 3 );
 
@@ -122,8 +124,9 @@ static bool __resource_sqlite_exec_stmt(sqlite3 *pDb,  const char *sql_stmt, int
     bool execStmtOk = true;
     char *zErrMsg = 0;
     int rc;
+    int counter = 0;
 
-    rc = sqlite3_exec(pDb, "SELECT * FROM test;", callback_one, 0, &zErrMsg);
+    rc = sqlite3_exec(pDb, "SELECT * FROM test;", callback_one, (void*)&counter, &zErrMsg);
     if( rc!=SQLITE_OK ){
       fprintf(stderr, "SQL error: %s\n", zErrMsg);
       sqlite3_free(zErrMsg);
